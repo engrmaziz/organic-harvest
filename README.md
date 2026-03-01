@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍃 Organic Harvest | Premium E-Commerce Engine
 
-## Getting Started
+An ultra-premium, full-stack e-commerce platform engineered for the Pakistani organic market. This project transitions from a blank canvas to a production-ready boutique storefront in a high-intensity 12-hour sprint.
 
-First, run the development server:
+## 🚀 Tech Stack & Architecture
+* **Framework:** Next.js 15 (App Router) with Turbopack
+* **Language:** TypeScript (Strict Type Safety)
+* **Styling:** Tailwind CSS v4 (Custom OKLCH & HEX palette)
+* **Database & Auth:** Supabase (PostgreSQL)
+* **State Management:** Zustand (Cart persistence with LocalStorage)
+* **Animations:** Framer Motion (Staggered cascades and page transitions)
+* **Communication:** Resend API & @react-email (Transactional automation)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Key Engineering Milestones
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Bulletproof PDF Receipt Generation
+We solved the "Hydration Mismatch" and "CSSOM Parser" crashes by building a dedicated, Zero-Tailwind rendering layer.
+* **Strict HEX rendering:** Uses `#0B1C10` and `#D4AF37` to bypass modern CSS `lab()` crashes in `html2canvas`.
+* **Local Asset Mounting:** Standard HTML `<img>` tags bypass CORS exceptions during DOM cloning.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2. Professional Checkout & Lead Hardening
+* **Pakistani Number Validation:** Rigid algorithmic Regex for `+92` prefixes and 10-11 digit enforcement.
+* **WhatsApp Support Funnel:** Dynamic Order ID encoding into `wa.me` nodes for instant customer support.
+* **Discount Logic:** Real-time recalculation engine supporting codes like `WELCOME10`.
 
-## Learn More
+### 3. Secret Admin Dashboard (`/admin-orders`)
+* **Security Shield:** Protected by a React state lock and secret access key.
+* **Real-time CRM:** Chronological order tracking with status mutation engine (Pending ➔ Delivered).
+* **Granular Vault:** Modal-based access to customer emails, addresses, and JSON-mapped product arrays.
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Technical SEO & Performance
+* **JSON-LD Schema:** Injected Organization and Product schemas for Google Knowledge Graph optimization in Pakistan.
+* **Dynamic Metadata:** Server-rendered `generateMetadata` for every category and product slug.
+* **Skeleton Loaders:** `ImageWithSkeleton.tsx` prevents layout shifts on 4G connections.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎨 Brand Identity (Visual System)
+* **Dark Forest Green (#0B1C10):** Stability and Organic Trust.
+* **Antique Gold (#D4AF37):** Luxury and Premium Quality.
+* **Creamy Off-White (#FDFBF7):** Clean, Modern Backdrop.
+* **Typography:** Playfair Display (Headings) | Inter (Body Text).
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Installation & Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/engrmaziz/organic-harvest.git](https://github.com/engrmaziz/organic-harvest.git)
