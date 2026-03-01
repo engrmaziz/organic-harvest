@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CartSlideOut } from "@/components/cart/CartSlideOut";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -57,6 +58,7 @@ export default function RootLayout({
         <Footer />
         <CartSlideOut />
         <WhatsAppWidget />
+        <Analytics />
       </body>
     </html>
   );
