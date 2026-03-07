@@ -13,21 +13,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No messages provided." }, { status: 400 });
     }
 
-    // Fetch active products from Supabase
-    const { data: products } = await supabase
-      .from("products")
-      .select("id, name, price, category, tags")
-      .eq("is_active", true);
+    // Fetch active products from Supabase with graceful degradation
+    let productList = "No products currently available.";
+    try {
+      const { data: products, error: supabaseError } = await supabase
+        .from("products")
+        .select("id, name, price, category, tags")
+        .eq("is_active", true);
 
-    const productList =
-      products && products.length > 0
-        ? products
-            .map(
-              (p) =>
-                `- ${p.name} | Category: ${p.category} | Price: Rs. ${p.price}${p.tags ? ` | Tags: ${p.tags}` : ""}`
-            )
-            .join("\n")
-        : "No products currently available.";
+      if (supabaseError) {
+        throw supabaseError;
+      }
+
+      if (products && products.length > 0) {
+        productList = products
+          .map(
+            (p) =>
+              `- ${p.name} | Category: ${p.category} | Price: Rs. ${p.price}${p.tags ? ` | Tags: ${p.tags}` : ""}`
+          )
+          .join("\n");
+      }
+    } catch (error) {
+      console.error("Supabase Error:", error);
+      // Fall back to empty product list so Nectar can still respond
+      productList = "No products currently available.";
+    }
 
     const systemPrompt = `You are Nectar, the official AI guide for Organic Harvest, a premium Pakistani organic food brand. You are friendly, helpful, and knowledgeable about our products.
 
@@ -45,22 +55,30 @@ If a user asks something outside your knowledge, or requests human support, DO N
 
 Always respond in a helpful, concise, and friendly manner. Only answer questions related to Organic Harvest products, orders, shipping, and general brand information.`;
 
-    const completion = await groq.chat.completions.create({
-      model: "llama3-8b-8192",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages.map((m) => ({
-          role: m.role as "user" | "assistant",
-          content: m.content,
-        })),
-      ],
-    });
+    try {
+      const completion = await groq.chat.completions.create({
+        model: "llama3-8b-8192",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages.map((m) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          })),
+        ],
+      });
 
-    const assistantMessage = completion.choices[0]?.message?.content ?? "I'm sorry, I couldn't generate a response. Please try again.";
+      const assistantMessage = completion.choices[0]?.message?.content ?? "I'm sorry, I couldn't generate a response. Please try again.";
 
-    return NextResponse.json({ message: assistantMessage });
+      return NextResponse.json({ message: assistantMessage });
+    } catch (error) {
+      console.error("Groq Error:", error);
+      return NextResponse.json(
+        { error: "An unexpected error occurred. Please try again later." },
+        { status: 500 }
+      );
+    }
   } catch (err) {
-    console.error("Chat API error:", err);
+    console.error("GROQ/SUPABASE API ERROR:", err);
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again later." },
       { status: 500 }
