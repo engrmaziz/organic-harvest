@@ -3,6 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { supabase } from "@/lib/supabase";
 
+function generateSlug(name: string): string {
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/[\s]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
 export interface ProductData {
     name: string;
     price: number;
@@ -42,9 +51,11 @@ export async function addProduct(
             return { success: false, error: "A valid image URL is required." };
         }
 
+        const trimmedName = data.name.trim();
         const { error } = await supabase.from("products").insert([
             {
-                name: data.name.trim(),
+                name: trimmedName,
+                slug: generateSlug(trimmedName),
                 price: data.price,
                 weight: data.weight.trim(),
                 description: data.description.trim(),
