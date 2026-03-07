@@ -18,7 +18,8 @@ const productSchema = z.object({
         }),
     weight: z.string().min(1, "Weight is required (e.g., 500g)."),
     description: z.string().min(10, "Description must be at least 10 characters."),
-    category: z.string().min(1, "Please select a category."),
+    category: z.enum(["Natural Sweets", "Cooking Essentials"]),
+    tags: z.string().optional(),
     image: z
         .custom<FileList>((val) => val instanceof FileList, "Image is required.")
         .refine((files) => files.length > 0, "Please select an image.")
@@ -33,17 +34,6 @@ const productSchema = z.object({
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
-
-const CATEGORIES = [
-    "Honey",
-    "Nuts & Seeds",
-    "Dried Fruits",
-    "Spices & Herbs",
-    "Oils & Ghee",
-    "Superfoods",
-    "Grains & Pulses",
-    "Other",
-];
 
 const inputClass =
     "w-full rounded-md border border-[#D4AF37]/30 bg-[#0B1C10] px-3 py-2 text-[#FDFBF7] placeholder-[#FDFBF7]/40 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition text-sm";
@@ -80,6 +70,7 @@ export default function AddProductForm() {
                     weight: values.weight,
                     description: values.description,
                     category: values.category,
+                    tags: values.tags ?? "",
                 },
                 imageUrl
             );
@@ -172,16 +163,24 @@ export default function AddProductForm() {
                 <div>
                     <label className={labelClass}>Category</label>
                     <select {...register("category")} className={inputClass}>
-                        <option value="">Select a category...</option>
-                        {CATEGORIES.map((cat) => (
-                            <option key={cat} value={cat}>
-                                {cat}
-                            </option>
-                        ))}
+                        <option value="Natural Sweets">Natural Sweets</option>
+                        <option value="Cooking Essentials">Cooking Essentials</option>
                     </select>
                     {errors.category && (
                         <p className={errorClass}>{errors.category.message}</p>
                     )}
+                </div>
+
+                {/* Tags */}
+                <div>
+                    <label className={labelClass}>Tags (comma separated)</label>
+                    <input
+                        {...register("tags")}
+                        type="text"
+                        placeholder="e.g., honey, raw, organic"
+                        className="w-full p-3 rounded-md bg-[#0B1C10] border border-[#D4AF37]/30 text-[#FDFBF7] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none placeholder:text-gray-500"
+                    />
+                    {errors.tags && <p className={errorClass}>{errors.tags.message}</p>}
                 </div>
 
                 {/* Image */}

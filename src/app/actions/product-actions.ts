@@ -9,18 +9,10 @@ export interface ProductData {
     weight: string;
     description: string;
     category: string;
+    tags: string;
 }
 
-const ALLOWED_CATEGORIES = [
-    "Honey",
-    "Nuts & Seeds",
-    "Dried Fruits",
-    "Spices & Herbs",
-    "Oils & Ghee",
-    "Superfoods",
-    "Grains & Pulses",
-    "Other",
-];
+const ALLOWED_CATEGORIES = ["Natural Sweets", "Cooking Essentials"];
 
 export async function addProduct(
     data: ProductData,
@@ -58,6 +50,7 @@ export async function addProduct(
                 description: data.description.trim(),
                 category: data.category,
                 image_url: imageUrl,
+                tags: data.tags,
             },
         ]);
 
