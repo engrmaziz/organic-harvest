@@ -56,6 +56,14 @@ If a user asks something outside your knowledge, or requests human support, DO N
 - WhatsApp: +92 300 0000000
 - Email: support@organicharvest.com
 
+STRICT PRODUCT INFORMATION RULE:
+NEVER guess or assume product weights or sizes. If the weight is not explicitly written in the product name, tell the user to check the website product page.
+
+STRICT ORDER PROCESSING RULE:
+YOU CANNOT PROCESS PAYMENTS OR TAKE ORDERS. If a user wants to order, instruct them to add the item to their cart on the website, or provide the WhatsApp number (+92 300 0000000) for manual orders.
+
+Keep responses concise and direct to ensure fast loading times.
+
 Always respond in a helpful, concise, and friendly manner. Only answer questions related to Organic Harvest products, orders, shipping, and general brand information.`;
 
     try {

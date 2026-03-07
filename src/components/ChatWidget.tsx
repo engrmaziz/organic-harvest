@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { Sparkles, X, Send } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -10,6 +10,7 @@ interface Message {
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -20,6 +21,11 @@ export function ChatWidget() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowTooltip(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -67,10 +73,10 @@ export function ChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-4">
       {/* Chat Window */}
       {isOpen && (
-        <div className="w-80 h-96 flex flex-col rounded-xl shadow-2xl border border-[#D4AF37]/30 overflow-hidden bg-[#0B1C10] text-[#FDFBF7]">
+        <div className="absolute bottom-16 right-0 w-80 h-96 flex flex-col rounded-xl shadow-2xl border border-[#D4AF37]/30 overflow-hidden bg-[#0B1C10] text-[#FDFBF7]">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#D4AF37]/30 bg-[#0B1C10]">
             <span className="font-semibold text-sm text-[#D4AF37]">
@@ -132,13 +138,29 @@ export function ChatWidget() {
         </div>
       )}
 
+      {/* Tooltip Bubble */}
+      <div
+        className={`px-4 py-2 bg-[#0B1C10] text-[#D4AF37] border border-[#D4AF37]/30 font-medium text-sm rounded-2xl shadow-xl transition-all duration-500 ease-in-out origin-right ${
+          showTooltip && !isOpen
+            ? "opacity-100 translate-x-0 scale-100"
+            : "opacity-0 translate-x-4 scale-95 pointer-events-none"
+        }`}
+      >
+        Hi, I&apos;m Nectar AI! ✨
+      </div>
+
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? "Close chat" : "Open Nectar chat"}
-        className="w-14 h-14 rounded-full bg-[#D4AF37] text-[#0B1C10] flex items-center justify-center shadow-lg hover:bg-[#D4AF37]/90 transition-colors"
+        className="relative w-14 h-14 rounded-full bg-[#D4AF37] text-[#0B1C10] flex items-center justify-center shadow-lg hover:bg-[#D4AF37]/90 transition-colors group"
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+        <div className="absolute inset-0 rounded-full bg-[#D4AF37] animate-ping opacity-40 group-hover:opacity-0 transition-opacity duration-300"></div>
+        {isOpen ? (
+          <X size={24} className="relative z-10" />
+        ) : (
+          <Sparkles size={24} className="relative z-10" />
+        )}
       </button>
     </div>
   );
