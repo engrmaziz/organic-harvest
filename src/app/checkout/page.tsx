@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { CheckCircle2, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { validateCoupon } from "@/app/actions/discount-actions";
 
 // Utility to format currency
 const formatPrice = (price: number) => {
@@ -24,12 +25,11 @@ const formatPrice = (price: number) => {
 
 export default function CheckoutPage() {
     const router = useRouter();
-    const { items, getCartTotal, clearCart } = useCartStore();
+    const { items, setCoupon, clearCoupon, couponCode, discountAmount, getSubtotal, getShipping, getGrandTotal } = useCartStore();
 
     // Mounted state to handle hydration properly
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [orderSuccess, setOrderSuccess] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -42,23 +42,42 @@ export default function CheckoutPage() {
         payment_method: "COD",
     });
 
-    const [couponCode, setCouponCode] = useState("");
-    const [discountApplied, setDiscountApplied] = useState(false);
+    const [couponInput, setCouponInput] = useState("");
+    const [couponApplied, setCouponApplied] = useState(false);
     const [discountError, setDiscountError] = useState("");
+    const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-    const handleApplyCoupon = () => {
-        if (couponCode.toUpperCase() === "WELCOME10") {
-            setDiscountApplied(true);
-            setDiscountError("");
+    const handleApplyCoupon = async () => {
+        if (!couponInput) return;
+        setApplyingCoupon(true);
+        setDiscountError("");
+        const result = await validateCoupon(couponInput);
+        if (!result.success || !result.data) {
+            setDiscountError(result.error ?? "Invalid coupon code.");
+            setCouponApplied(false);
         } else {
-            setDiscountApplied(false);
-            setDiscountError("Invalid coupon code");
+            const { discount_type, discount_value, code } = result.data;
+            const subtotal = getSubtotal();
+            const amount =
+                discount_type === "percentage"
+                    ? (subtotal * discount_value) / 100
+                    : discount_value;
+            setCoupon(code, amount);
+            setCouponApplied(true);
         }
+        setApplyingCoupon(false);
     };
 
-    const subtotal = getCartTotal();
-    const discountAmount = discountApplied ? subtotal * 0.1 : 0;
-    const finalTotal = subtotal - discountAmount;
+    const handleRemoveCoupon = () => {
+        clearCoupon();
+        setCouponInput("");
+        setCouponApplied(false);
+        setDiscountError("");
+    };
+
+    const subtotal = mounted ? getSubtotal() : 0;
+    const shippingFee = mounted ? getShipping() : 250;
+    const finalTotal = mounted ? getGrandTotal() : 0;
 
     useEffect(() => {
         setMounted(true);
@@ -84,7 +103,12 @@ export default function CheckoutPage() {
                 order_notes: formData.order_notes,
                 payment_method: formData.payment_method,
                 total_amount: finalTotal,
-                discount_code: discountApplied ? "WELCOME10" : null,
+                subtotal,
+                shipping_fee: shippingFee,
+                discount_applied: discountAmount,
+                grand_total: finalTotal,
+                coupon_used: couponCode ?? null,
+                discount_code: couponCode ?? null, // kept for backward compatibility with admin-orders view
                 status: "Pending",
                 items: items.map(item => ({
                     product_id: item.id,
@@ -179,13 +203,33 @@ export default function CheckoutPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="flex space-x-2">
-                                    <Input placeholder="Enter coupon code" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} disabled={discountApplied} />
-                                    <Button type="button" variant="outline" onClick={handleApplyCoupon} disabled={!couponCode || discountApplied}>
-                                        {discountApplied ? "Applied" : "Apply"}
-                                    </Button>
+                                    <Input
+                                        placeholder="Enter coupon code"
+                                        value={couponInput}
+                                        onChange={(e) => setCouponInput(e.target.value)}
+                                        disabled={couponApplied}
+                                    />
+                                    {couponApplied ? (
+                                        <Button type="button" variant="outline" onClick={handleRemoveCoupon}>
+                                            Remove
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleApplyCoupon}
+                                            disabled={!couponInput || applyingCoupon}
+                                        >
+                                            {applyingCoupon ? "Checking..." : "Apply"}
+                                        </Button>
+                                    )}
                                 </div>
                                 {discountError && <p className="text-sm text-red-500 mt-2">{discountError}</p>}
-                                {discountApplied && <p className="text-sm text-green-600 mt-2 font-medium">10% Off applied successfully!</p>}
+                                {couponApplied && couponCode && (
+                                    <p className="text-sm text-green-600 mt-2 font-medium">
+                                        Coupon &quot;{couponCode}&quot; applied successfully!
+                                    </p>
+                                )}
                             </CardContent>
                         </Card>
 
@@ -258,16 +302,25 @@ export default function CheckoutPage() {
                                     <span>Subtotal</span>
                                     <span className="font-medium text-foreground">{formatPrice(subtotal)}</span>
                                 </div>
-                                {discountApplied && (
+                                {couponApplied && discountAmount > 0 && couponCode && (
                                     <div className="flex justify-between text-green-600 text-sm font-medium">
-                                        <span>Discount (WELCOME10 - 10%)</span>
+                                        <span>Discount ({couponCode})</span>
                                         <span>-{formatPrice(discountAmount)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-muted-foreground text-sm">
                                     <span>Shipping</span>
-                                    <span className="font-medium text-foreground">Calculated later</span>
+                                    <span className="font-medium text-foreground">
+                                        {shippingFee === 0 ? (
+                                            <span className="text-green-600 font-semibold">Free</span>
+                                        ) : (
+                                            formatPrice(shippingFee)
+                                        )}
+                                    </span>
                                 </div>
+                                {shippingFee > 0 && (
+                                    <p className="text-xs text-muted-foreground">Free shipping on orders above Rs. 3,000</p>
+                                )}
                                 <Separator className="my-2" />
                                 <div className="flex justify-between items-center pt-2">
                                     <span className="font-bold text-lg">Grand Total</span>
