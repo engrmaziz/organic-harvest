@@ -13,6 +13,8 @@ export interface CartItem {
 interface CartStore {
     items: CartItem[];
     isOpen: boolean;
+    couponCode: string | null;
+    discountAmount: number;
     addItem: (item: Omit<CartItem, 'quantity'>) => void;
     removeItem: (id: string) => void;
     updateQuantity: (id: string, quantity: number) => void;
@@ -20,8 +22,13 @@ interface CartStore {
     decrementQuantity: (id: string) => void;
     clearCart: () => void;
     setIsOpen: (isOpen: boolean) => void;
+    setCoupon: (code: string | null, discountAmount: number) => void;
+    clearCoupon: () => void;
     getCartTotal: () => number;
     getCartCount: () => number;
+    getSubtotal: () => number;
+    getShipping: () => number;
+    getGrandTotal: () => number;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -29,6 +36,8 @@ export const useCartStore = create<CartStore>()(
         (set, get) => ({
             items: [],
             isOpen: false,
+            couponCode: null,
+            discountAmount: 0,
 
             addItem: (newItem) => {
                 set((state) => {
@@ -87,9 +96,13 @@ export const useCartStore = create<CartStore>()(
                 }));
             },
 
-            clearCart: () => set({ items: [] }),
+            clearCart: () => set({ items: [], couponCode: null, discountAmount: 0 }),
 
             setIsOpen: (isOpen) => set({ isOpen }),
+
+            setCoupon: (code, amount) => set({ couponCode: code, discountAmount: amount }),
+
+            clearCoupon: () => set({ couponCode: null, discountAmount: 0 }),
 
             getCartTotal: () => {
                 const { items } = get();
@@ -100,10 +113,28 @@ export const useCartStore = create<CartStore>()(
                 const { items } = get();
                 return items.reduce((count, item) => count + item.quantity, 0);
             },
+
+            getSubtotal: () => {
+                const { items } = get();
+                return items.reduce((total, item) => total + item.price * item.quantity, 0);
+            },
+
+            getShipping: () => {
+                const subtotal = get().getSubtotal();
+                return subtotal >= 3000 ? 0 : 250;
+            },
+
+            getGrandTotal: () => {
+                const { discountAmount } = get();
+                const subtotal = get().getSubtotal();
+                const shipping = get().getShipping();
+                const discounted = Math.max(0, subtotal - discountAmount);
+                return discounted + shipping;
+            },
         }),
         {
-            name: 'organic-harvest-cart', // name of the item in the storage (must be unique)
-            partialize: (state) => ({ items: state.items }), // Only persist items, not isOpen state
+            name: 'organic-harvest-cart',
+            partialize: (state) => ({ items: state.items, couponCode: state.couponCode, discountAmount: state.discountAmount }),
         }
     )
 );
