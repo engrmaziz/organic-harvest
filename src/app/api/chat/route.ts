@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     try {
       const { data: products, error: supabaseError } = await supabase
         .from("products")
-        .select("id, name, price, category, tags")
+        .select("id, name, price, category, tags, weight")
         .eq("is_active", true);
 
       if (supabaseError) {
