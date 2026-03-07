@@ -69,8 +69,7 @@ export async function addProduct(
             return { success: false, error: error.message };
         }
 
-        revalidatePath("/admin-products");
-        revalidatePath("/products");
+        revalidatePath('/', 'layout');
 
         return { success: true };
     } catch (err) {
@@ -98,8 +97,7 @@ export async function deleteProduct(
             return { success: false, error: error.message };
         }
 
-        revalidatePath("/admin-products");
-        revalidatePath("/products");
+        revalidatePath('/', 'layout');
 
         return { success: true };
     } catch (err) {
