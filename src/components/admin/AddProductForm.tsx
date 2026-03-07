@@ -20,6 +20,13 @@ const productSchema = z.object({
     description: z.string().min(10, "Description must be at least 10 characters."),
     category: z.enum(["Natural Sweets", "Cooking Essentials"]),
     tags: z.string().optional(),
+    stock_quantity: z
+        .string()
+        .min(1, "Stock quantity is required.")
+        .refine(
+            (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number.isInteger(Number(val)),
+            { message: "Stock quantity must be a non-negative whole number." }
+        ),
     image: z
         .custom<FileList>((val) => val instanceof FileList, "Image is required.")
         .refine((files) => files.length > 0, "Please select an image.")
@@ -71,6 +78,7 @@ export default function AddProductForm() {
                     description: values.description,
                     category: values.category,
                     tags: values.tags ?? "",
+                    stock_quantity: Number(values.stock_quantity),
                 },
                 imageUrl
             );
@@ -121,7 +129,7 @@ export default function AddProductForm() {
                     {errors.name && <p className={errorClass}>{errors.name.message}</p>}
                 </div>
 
-                {/* Price & Weight */}
+                {/* Price, Weight & Stock */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className={labelClass}>Price (PKR)</label>
@@ -143,6 +151,22 @@ export default function AddProductForm() {
                         />
                         {errors.weight && <p className={errorClass}>{errors.weight.message}</p>}
                     </div>
+                </div>
+
+                {/* Stock Quantity */}
+                <div>
+                    <label className={labelClass}>Stock Quantity</label>
+                    <input
+                        {...register("stock_quantity")}
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="e.g., 50"
+                        className={inputClass}
+                    />
+                    {errors.stock_quantity && (
+                        <p className={errorClass}>{errors.stock_quantity.message}</p>
+                    )}
                 </div>
 
                 {/* Description */}

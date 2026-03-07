@@ -143,6 +143,11 @@ export default function CategoryClient({ products, title }: { products: any[], t
                                                 Best Seller
                                             </Badge>
                                         )}
+                                        {product.stock_quantity <= 0 && (
+                                            <Badge className="absolute top-4 right-4 z-10 bg-red-600 hover:bg-red-600 text-white font-semibold px-3 py-1 uppercase tracking-widest text-[10px] shadow-sm">
+                                                Out of Stock
+                                            </Badge>
+                                        )}
                                         <ImageWithSkeleton
                                             src={getImageUrl(product.image_url)}
                                             alt={product.name}
@@ -183,10 +188,11 @@ export default function CategoryClient({ products, title }: { products: any[], t
                                                         image_url: product.image_url,
                                                     });
                                                 }}
-                                                className="w-full h-12 rounded-xl bg-foreground hover:bg-primary text-background font-semibold transition-colors duration-300 shadow-md group-hover:shadow-lg flex items-center justify-center gap-2"
+                                                disabled={product.stock_quantity <= 0}
+                                                className="w-full h-12 rounded-xl bg-foreground hover:bg-primary text-background font-semibold transition-colors duration-300 shadow-md group-hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <ShoppingBag className="h-5 w-5" />
-                                                Add to Cart
+                                                {product.stock_quantity <= 0 ? "Out of Stock" : "Add to Cart"}
                                             </Button>
                                         </div>
                                     </div>

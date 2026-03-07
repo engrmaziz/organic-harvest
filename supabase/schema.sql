@@ -24,3 +24,7 @@ ALTER TABLE orders
 ALTER TABLE products
     ADD COLUMN IF NOT EXISTS tags text,
     ADD COLUMN IF NOT EXISTS category text;
+
+-- 4. Add stock_quantity column to products table
+ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS stock_quantity integer NOT NULL DEFAULT 0;

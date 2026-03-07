@@ -19,6 +19,7 @@ export interface ProductData {
     description: string;
     category: string;
     tags: string;
+    stock_quantity: number;
 }
 
 const ALLOWED_CATEGORIES = ["Natural Sweets", "Cooking Essentials"];
@@ -37,6 +38,9 @@ export async function addProduct(
         }
         if (!Number.isFinite(data.price) || data.price <= 0) {
             return { success: false, error: "Price must be a positive number." };
+        }
+        if (!Number.isFinite(data.stock_quantity) || data.stock_quantity < 0 || !Number.isInteger(data.stock_quantity)) {
+            return { success: false, error: "Stock quantity must be a non-negative integer." };
         }
         if (!data.weight || data.weight.trim().length === 0) {
             return { success: false, error: "Weight is required." };
@@ -62,6 +66,7 @@ export async function addProduct(
                 category: data.category,
                 image_url: imageUrl,
                 tags: data.tags,
+                stock_quantity: data.stock_quantity,
             },
         ]);
 
@@ -79,13 +84,28 @@ export async function addProduct(
 }
 
 export async function deleteProduct(
-    id: string
+    id: string,
+    imageUrl?: string
 ): Promise<{ success: boolean; error?: string }> {
     try {
         // Validate UUID format to prevent injection
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (!id || !uuidRegex.test(id)) {
             return { success: false, error: "Invalid product ID." };
+        }
+
+        // Delete image from Supabase storage if a URL was provided
+        if (imageUrl) {
+            try {
+                const marker = "/product-images/";
+                const markerIndex = imageUrl.indexOf(marker);
+                if (markerIndex !== -1) {
+                    const filePath = imageUrl.slice(markerIndex + marker.length);
+                    await supabase.storage.from("product-images").remove([filePath]);
+                }
+            } catch {
+                // Non-fatal: proceed with DB deletion even if image removal fails
+            }
         }
 
         const { error } = await supabase
