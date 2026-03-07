@@ -63,7 +63,7 @@ export async function addProduct(
                 price: data.price,
                 weight: data.weight.trim(),
                 description: data.description.trim(),
-                category: data.category,
+                category: data.category.toLowerCase().replace(/\s+/g, '-'),
                 image_url: imageUrl,
                 tags: data.tags,
                 stock_quantity: data.stock_quantity,
