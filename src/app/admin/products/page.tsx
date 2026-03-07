@@ -16,6 +16,7 @@ interface Product {
     category?: string;
     tags?: string;
     image_url?: string;
+    stock_quantity?: number;
     created_at?: string;
 }
 
@@ -28,7 +29,7 @@ const formatPrice = (price: number) =>
         .format(price)
         .replace("PKR", "Rs.");
 
-function DeleteButton({ id, name, onDeleted }: { id: string; name: string; onDeleted: () => void }) {
+function DeleteButton({ id, name, imageUrl, onDeleted }: { id: string; name: string; imageUrl?: string; onDeleted: () => void }) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
@@ -37,7 +38,7 @@ function DeleteButton({ id, name, onDeleted }: { id: string; name: string; onDel
         );
         if (!confirmed) return;
         setIsDeleting(true);
-        const result = await deleteProduct(id);
+        const result = await deleteProduct(id, imageUrl);
         if (!result.success) {
             alert(`Failed to delete: ${result.error}`);
         } else {
@@ -194,6 +195,9 @@ export default function AdminProductsPage() {
                                         {product.tags}
                                     </p>
                                 )}
+                                <p className="text-xs mt-1 font-semibold" style={{ color: product.stock_quantity === 0 ? "#f87171" : "rgba(253,251,247,0.6)" }}>
+                                    Stock: {product.stock_quantity ?? 0}
+                                </p>
                             </div>
 
                             <div
@@ -203,6 +207,7 @@ export default function AdminProductsPage() {
                                 <DeleteButton
                                     id={product.id}
                                     name={product.name}
+                                    imageUrl={product.image_url}
                                     onDeleted={fetchProducts}
                                 />
                             </div>

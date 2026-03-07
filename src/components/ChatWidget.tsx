@@ -51,7 +51,8 @@ export function ChatWidget() {
         ...prev,
         { role: "assistant", content: assistantContent },
       ]);
-    } catch {
+    } catch (error) {
+      console.error(error);
       setMessages((prev) => [
         ...prev,
         {
@@ -66,7 +67,7 @@ export function ChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-3">
       {/* Chat Window */}
       {isOpen && (
         <div className="w-80 h-96 flex flex-col rounded-xl shadow-2xl border border-[#D4AF37]/30 overflow-hidden bg-[#0B1C10] text-[#FDFBF7]">
