@@ -57,7 +57,7 @@ Always respond in a helpful, concise, and friendly manner. Only answer questions
 
     try {
       const completion = await groq.chat.completions.create({
-        model: "llama3-8b-8192",
+        model: "llama-3.1-8b-instant",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages.map((m) => ({
