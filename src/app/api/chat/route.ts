@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     try {
       const { data: products, error: supabaseError } = await supabase
         .from("products")
-        .select("id, name, price, category, tags, weight")
+        .select("id, name, price, category, tags, stock_quantity")
         .eq("is_active", true);
 
       if (supabaseError) {
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         productList = products
           .map(
             (p) =>
-              `- ${p.name} | Category: ${p.category} | Price: Rs. ${p.price}${p.tags ? ` | Tags: ${p.tags}` : ""}`
+              `- ${p.name} | Category: ${p.category} | Price: Rs. ${p.price} | Stock: ${p.stock_quantity}${p.tags ? ` | Tags: ${p.tags}` : ""}`
           )
           .join("\n");
       }
@@ -47,6 +47,9 @@ BUSINESS RULES:
 
 CURRENT LIVE STOCK:
 ${productList}
+
+STRICT STOCK RULE:
+Before confirming availability, check the stock_quantity field. If stock_quantity is 0, you MUST explicitly tell the user that the item is currently OUT OF STOCK and apologize.
 
 STRICT FALLBACK RULE:
 If a user asks something outside your knowledge, or requests human support, DO NOT hallucinate or make up information. Apologize politely and instruct them to contact human support via:
