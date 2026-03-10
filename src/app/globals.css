@@ -127,3 +127,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  @page {
+    size: auto;
+    margin: 0mm; /* This completely removes the browser's default URLs and page numbers */
+  }
+  body {
+    margin: 1.5cm; /* This adds a nice clean border around your beautiful invoice */
+  }
+}
