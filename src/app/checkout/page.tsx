@@ -14,6 +14,7 @@ import { ShoppingBag } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { validateCoupon, burnCoupon } from "@/app/actions/discount-actions";
 import { sendOrderConfirmationEmail } from "@/app/actions/send-order-email";
+import { saveDraftOrder } from "@/app/actions/checkout-actions";
 
 // Utility to format currency
 const formatPrice = (price: number) => {
@@ -43,6 +44,7 @@ export default function CheckoutPage() {
         payment_method: "COD",
     });
 
+    const [draftOrderId, setDraftOrderId] = useState<string | null>(null);
     const [couponInput, setCouponInput] = useState("");
     const [couponApplied, setCouponApplied] = useState(false);
     const [discountError, setDiscountError] = useState("");
@@ -88,6 +90,22 @@ export default function CheckoutPage() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleEmailBlur = async () => {
+        const email = formData.customer_email;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email) || items.length === 0) return;
+        const mappedItems = items.map(item => ({
+            product_id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+        }));
+        const result = await saveDraftOrder(email, mappedItems, subtotal, draftOrderId);
+        if (result.id) {
+            setDraftOrderId(result.id);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (items.length === 0) return;
@@ -119,12 +137,17 @@ export default function CheckoutPage() {
                 })),
             };
 
-            const { data, error } = await supabase.from("orders").insert([orderPayload]).select();
+            const { data, error } = draftOrderId
+                ? await supabase.from("orders").update(orderPayload).eq("id", draftOrderId).eq("status", "Draft").select()
+                : await supabase.from("orders").insert([orderPayload]).select();
 
-            if (error) throw error;
+            // If the draft was claimed by the cron job before checkout completed, fall back to insert
+            const { data: finalData, error: finalError } = (draftOrderId && (!data || data.length === 0) && !error)
+                ? await supabase.from("orders").insert([orderPayload]).select()
+                : { data, error };
 
-            // Route to success page and inject order data into the URL so the Success Tracker can read it
-            const orderId = data && data[0] ? data[0].id : "unknown";
+            if (finalError) throw finalError;
+            const orderId = finalData && finalData[0] ? finalData[0].id : "unknown";
 
             // Burn coupon after successful order to prevent reuse beyond max_uses
             if (couponCode) {
@@ -194,7 +217,7 @@ export default function CheckoutPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="customer_email">Email Address</Label>
-                                        <Input id="customer_email" type="email" name="customer_email" required value={formData.customer_email} onChange={handleChange} placeholder="e.g. john@example.com" />
+                                        <Input id="customer_email" type="email" name="customer_email" required value={formData.customer_email} onChange={handleChange} onBlur={handleEmailBlur} placeholder="e.g. john@example.com" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
