@@ -127,8 +127,9 @@ export default function CheckoutPage() {
             router.push(`/checkout/success?id=${orderId}&total=${finalTotal}&method=${encodeURIComponent(formData.payment_method)}&phone=${encodeURIComponent(formData.customer_phone)}`);
 
         } catch (error: any) {
-            console.error("Order Error Details:", error.message || error.details || error);
-            alert("Failed to place order. Please try again.");
+            console.error("🔥 CHECKOUT ERROR:", error);
+            const errorMessage = error instanceof Error ? error.message : (error?.message || error?.details || "An unexpected error occurred. Please try again.");
+            alert("Checkout Failed: " + errorMessage);
         } finally {
             setIsSubmitting(false);
         }
