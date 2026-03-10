@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { Users, Download, Loader2 } from "lucide-react";
+import { Users, Download, Loader2, Cloud } from "lucide-react";
+import { exportCustomersToSheets } from "@/app/actions/export-sheets";
 
 const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-PK", {
@@ -30,6 +31,7 @@ export default function CustomersPage() {
     const [dateFilter, setDateFilter] = useState<DateFilter>("all");
     const [customFrom, setCustomFrom] = useState("");
     const [customTo, setCustomTo] = useState("");
+    const [isExportingSheet, setIsExportingSheet] = useState(false);
 
     useEffect(() => {
         fetchOrders();
@@ -117,6 +119,22 @@ export default function CustomersPage() {
         URL.revokeObjectURL(url);
     };
 
+    const handleExportSheets = async () => {
+        setIsExportingSheet(true);
+        try {
+            const result = await exportCustomersToSheets(customers);
+            if (result.success) {
+                alert("Exported to Google Sheets successfully!");
+            } else {
+                alert(`Failed to export: ${result.error}`);
+            }
+        } catch (err) {
+            alert("An unexpected error occurred while exporting.");
+        } finally {
+            setIsExportingSheet(false);
+        }
+    };
+
     return (
         <div className="p-8" style={{ color: "#FDFBF7" }}>
             <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -181,6 +199,22 @@ export default function CustomersPage() {
                     >
                         <Download className="h-4 w-4" />
                         Export CSV
+                    </button>
+
+                    <button
+                        onClick={handleExportSheets}
+                        disabled={isExportingSheet}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition"
+                        style={{
+                            backgroundColor: "transparent",
+                            color: "#22c55e",
+                            borderColor: "#22c55e",
+                            opacity: isExportingSheet ? 0.7 : 1,
+                            cursor: isExportingSheet ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        <Cloud className="h-4 w-4" />
+                        {isExportingSheet ? "Syncing..." : "Export to Sheets"}
                     </button>
                 </div>
             </div>
