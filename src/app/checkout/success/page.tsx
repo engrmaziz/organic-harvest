@@ -275,10 +275,10 @@ function SuccessContent() {
                     </div>
                     <div style={{ textAlign: "right" }}>
                         <p style={{ fontSize: "22px", fontWeight: "800", letterSpacing: "4px", color: BRAND_COLOR, margin: 0 }}>INVOICE</p>
-                        <p style={{ fontSize: "13px", color: "#374151", margin: "6px 0 2px 0" }}>
+                        <p style={{ fontSize: "13px", color: "#374151", margin: "6px 0 2px 0", whiteSpace: "nowrap" }}>
                             <span style={{ fontWeight: "600" }}>Order ID:</span> #{orderId.split("-")[0].toUpperCase()}
                         </p>
-                        <p style={{ fontSize: "13px", color: "#374151", margin: 0 }}>
+                        <p style={{ fontSize: "13px", color: "#374151", margin: 0, whiteSpace: "nowrap" }}>
                             <span style={{ fontWeight: "600" }}>Date:</span> {invoiceDate}
                         </p>
                     </div>
@@ -341,30 +341,30 @@ function SuccessContent() {
 
                 {/* Financial Summary */}
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <div style={{ width: "300px" }}>
+                    <div style={{ width: "380px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "14px", borderBottom: "1px solid #e5e7eb" }}>
-                            <span style={{ color: "#6b7280" }}>Subtotal</span>
-                            <span style={{ fontWeight: "500" }}>{formatPrice(invoiceSubtotal)}</span>
+                            <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>Subtotal</span>
+                            <span style={{ fontWeight: "500", whiteSpace: "nowrap" }}>{formatPrice(invoiceSubtotal)}</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "14px", borderBottom: "1px solid #e5e7eb" }}>
-                            <span style={{ color: "#6b7280" }}>Shipping Fee</span>
-                            <span style={{ fontWeight: "500" }}>{invoiceShipping === 0 ? "Free" : formatPrice(invoiceShipping)}</span>
+                            <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>Shipping Fee</span>
+                            <span style={{ fontWeight: "500", whiteSpace: "nowrap" }}>{invoiceShipping === 0 ? "Free" : formatPrice(invoiceShipping)}</span>
                         </div>
                         {invoiceCoupon && (
                             <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "14px", borderBottom: "1px solid #e5e7eb" }}>
-                                <span style={{ color: "#6b7280" }}>Coupon Applied</span>
-                                <span style={{ fontWeight: "500", color: "#16a34a" }}>{invoiceCoupon}</span>
+                                <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>Coupon Applied</span>
+                                <span style={{ fontWeight: "500", color: "#16a34a", whiteSpace: "nowrap" }}>{invoiceCoupon}</span>
                             </div>
                         )}
                         {invoiceDiscount > 0 && (
                             <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "14px", borderBottom: "1px solid #e5e7eb" }}>
-                                <span style={{ color: "#6b7280" }}>Discount</span>
-                                <span style={{ fontWeight: "500", color: "#16a34a" }}>- {formatPrice(invoiceDiscount)}</span>
+                                <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>Discount</span>
+                                <span style={{ fontWeight: "500", color: "#16a34a", whiteSpace: "nowrap" }}>- {formatPrice(invoiceDiscount)}</span>
                             </div>
                         )}
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 6px 0", fontSize: "16px", borderTop: `2px solid ${BRAND_COLOR}`, marginTop: "4px" }}>
-                            <span style={{ fontWeight: "700", color: BRAND_COLOR }}>Grand Total</span>
-                            <span style={{ fontWeight: "800", color: BRAND_COLOR }}>{formatPrice(invoiceGrandTotal)}</span>
+                            <span style={{ fontWeight: "700", color: BRAND_COLOR, whiteSpace: "nowrap" }}>Grand Total</span>
+                            <span style={{ fontWeight: "800", color: BRAND_COLOR, whiteSpace: "nowrap" }}>{formatPrice(invoiceGrandTotal)}</span>
                         </div>
                     </div>
                 </div>
