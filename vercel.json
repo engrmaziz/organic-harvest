@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/post-purchase",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
