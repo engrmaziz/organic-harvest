@@ -24,21 +24,13 @@ export async function exportCustomersToSheets(customers: any[]) {
         });
         const sheets = google.sheets({ version: "v4", auth });
 
-        const headers = [
-            "Name",
-            "Phone",
-            "Email",
-            "Total Orders",
-            "Lifetime Value (PKR)",
-            "Last Order Date",
-        ];
+        const headers = ["Name", "Phone", "Email", "Total Orders", "Lifetime Value"];
         const rows = customers.map((c) => [
             c.customer_name ?? "",
             c.customer_phone ?? "",
             c.customer_email ?? "",
             c.total_orders ?? 0,
             c.lifetime_value ?? 0,
-            c.last_order_date ?? "",
         ]);
 
         await sheets.spreadsheets.values.update({
