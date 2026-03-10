@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store/cart";
 import { useEffect, useState, Suspense } from "react";
-import { CheckCircle2, Package, Truck, ArrowRight } from "lucide-react";
+import { CheckCircle2, Package, Truck, ArrowRight, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -29,6 +29,19 @@ function SuccessContent() {
     const totalAmount = searchParams.get("total") ? parseFloat(searchParams.get("total")!) : 0;
     const paymentMethod = searchParams.get("method") || "COD";
     const customerPhone = searchParams.get("phone") || "your phone number";
+
+    // Share Order
+    const handleShare = async () => {
+        try {
+            await navigator.share({
+                title: 'Organic Harvest Order',
+                text: 'I just placed an order for premium organic food from Organic Harvest!',
+                url: window.location.origin,
+            });
+        } catch {
+            // Share not supported or user cancelled — fail silently
+        }
+    };
 
     // WhatsApp Message Builder
     const handleWhatsAppClick = () => {
@@ -124,13 +137,23 @@ function SuccessContent() {
 
                             <Separator />
 
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 print:hidden">
                                 <Button onClick={() => router.push("/")} size="lg" className="rounded-xl h-14 px-8 text-lg font-bold shadow-md bg-secondary text-secondary-foreground hover:bg-secondary/80 flex items-center gap-2 transition-all duration-300">
                                     Continue Shopping
                                 </Button>
                                 <Button onClick={handleWhatsAppClick} size="lg" className="rounded-xl h-14 px-8 text-lg font-bold shadow-lg bg-[#25D366] hover:bg-[#128C7E] text-white flex items-center gap-2 group transition-all duration-300">
                                     <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                     Message Us
+                                </Button>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center print:hidden">
+                                <Button onClick={() => window.print()} variant="outline" size="lg" className="rounded-xl h-14 px-8 text-lg font-bold flex items-center gap-2 transition-all duration-300">
+                                    <Download className="w-5 h-5" />
+                                    Download Receipt
+                                </Button>
+                                <Button onClick={handleShare} variant="outline" size="lg" className="rounded-xl h-14 px-8 text-lg font-bold flex items-center gap-2 transition-all duration-300">
+                                    <Share2 className="w-5 h-5" />
+                                    Share Order
                                 </Button>
                             </div>
                         </div>
