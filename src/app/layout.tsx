@@ -54,12 +54,12 @@ export default function RootLayout({
             })
           }}
         />
-        <Navbar />
+        <div className="print:hidden"><Navbar /></div>
         <main className="flex-grow">{children}</main>
-        <Footer />
-        <CartSlideOut />
-        <WhatsAppWidget />
-        <ChatWidget />
+        <div className="print:hidden"><Footer /></div>
+        <div className="print:hidden"><CartSlideOut /></div>
+        <div className="print:hidden"><WhatsAppWidget /></div>
+        <div className="print:hidden"><ChatWidget /></div>
         <Analytics />
       </body>
     </html>
