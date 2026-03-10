@@ -268,9 +268,9 @@ function SuccessContent() {
             >
 
                 {/* Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: `2px solid ${BRAND_COLOR}`, paddingBottom: "24px", marginBottom: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: "24px", marginBottom: "24px" }}>
                     <div>
-                        <p style={{ fontFamily: "Georgia, serif", fontSize: "28px", fontWeight: "700", color: BRAND_COLOR, margin: 0 }}>Organic Harvest</p>
+                        <p style={{ fontFamily: "Georgia, serif", fontSize: "32px", fontWeight: "800", color: BRAND_COLOR, margin: 0 }}>Organic Harvest</p>
                         <p style={{ fontSize: "13px", color: "#6b7280", margin: "4px 0 0 0" }}>Premium Organic Pantry Products · Pakistan</p>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -287,7 +287,7 @@ function SuccessContent() {
                 {/* Customer Details */}
                 <div style={{ marginBottom: "28px" }}>
                     <p style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "2px", textTransform: "uppercase", color: "#6b7280", marginBottom: "12px" }}>Bill To / Ship To</p>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 32px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 48px" }}>
                         <div>
                             <p style={{ fontSize: "11px", color: "#9ca3af", margin: "0 0 2px 0" }}>Customer Name</p>
                             <p style={{ fontSize: "14px", fontWeight: "600", margin: 0 }}>{orderDetails?.customer_name || "—"}</p>
@@ -315,7 +315,7 @@ function SuccessContent() {
                 <div style={{ marginBottom: "28px" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
                         <thead>
-                            <tr style={{ backgroundColor: BRAND_COLOR, color: "#ffffff" }}>
+                            <tr style={{ backgroundColor: "#f9fafb", color: "#6b7280" }}>
                                 <th style={{ textAlign: "left", padding: "10px 14px", fontWeight: "600", fontSize: "12px", letterSpacing: "1px", textTransform: "uppercase" }}>Item</th>
                                 <th style={{ textAlign: "center", padding: "10px 14px", fontWeight: "600", fontSize: "12px", letterSpacing: "1px", textTransform: "uppercase" }}>Qty</th>
                                 <th style={{ textAlign: "right", padding: "10px 14px", fontWeight: "600", fontSize: "12px", letterSpacing: "1px", textTransform: "uppercase" }}>Unit Price</th>
@@ -324,7 +324,7 @@ function SuccessContent() {
                         </thead>
                         <tbody>
                             {invoiceItems.length > 0 ? invoiceItems.map((item, idx) => (
-                                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? "#f9fafb" : "#ffffff", borderBottom: "1px solid #e5e7eb" }}>
+                                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? "#f9fafb" : "#ffffff" }}>
                                     <td style={{ padding: "10px 14px", fontWeight: "500" }}>{item.name}</td>
                                     <td style={{ padding: "10px 14px", textAlign: "center" }}>{item.quantity}</td>
                                     <td style={{ padding: "10px 14px", textAlign: "right" }}>{formatPrice(item.price)}</td>
@@ -342,35 +342,35 @@ function SuccessContent() {
                 {/* Financial Summary */}
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
                     <div style={{ width: "380px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "14px", borderBottom: "1px solid #e5e7eb" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "14px" }}>
                             <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>Subtotal</span>
                             <span style={{ fontWeight: "500", whiteSpace: "nowrap" }}>{formatPrice(invoiceSubtotal)}</span>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "14px", borderBottom: "1px solid #e5e7eb" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "14px" }}>
                             <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>Shipping Fee</span>
                             <span style={{ fontWeight: "500", whiteSpace: "nowrap" }}>{invoiceShipping === 0 ? "Free" : formatPrice(invoiceShipping)}</span>
                         </div>
                         {invoiceCoupon && (
-                            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "14px", borderBottom: "1px solid #e5e7eb" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "14px" }}>
                                 <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>Coupon Applied</span>
                                 <span style={{ fontWeight: "500", color: "#16a34a", whiteSpace: "nowrap" }}>{invoiceCoupon}</span>
                             </div>
                         )}
                         {invoiceDiscount > 0 && (
-                            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "14px", borderBottom: "1px solid #e5e7eb" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "14px" }}>
                                 <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>Discount</span>
                                 <span style={{ fontWeight: "500", color: "#16a34a", whiteSpace: "nowrap" }}>- {formatPrice(invoiceDiscount)}</span>
                             </div>
                         )}
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 6px 0", fontSize: "16px", borderTop: `2px solid ${BRAND_COLOR}`, marginTop: "4px" }}>
-                            <span style={{ fontWeight: "700", color: BRAND_COLOR, whiteSpace: "nowrap" }}>Grand Total</span>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 6px 0", fontSize: "20px", marginTop: "4px" }}>
+                            <span style={{ fontWeight: "800", color: BRAND_COLOR, whiteSpace: "nowrap" }}>Grand Total</span>
                             <span style={{ fontWeight: "800", color: BRAND_COLOR, whiteSpace: "nowrap" }}>{formatPrice(invoiceGrandTotal)}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div style={{ marginTop: "40px", borderTop: "1px solid #e5e7eb", paddingTop: "16px", textAlign: "center", fontSize: "12px", color: "#9ca3af" }}>
+                <div style={{ marginTop: "40px", paddingTop: "16px", textAlign: "center", fontSize: "12px", color: "#9ca3af" }}>
                     <p style={{ margin: 0 }}>Thank you for shopping with Organic Harvest · organicharvest.pk · support@organicharvest.pk</p>
                     <p style={{ margin: "4px 0 0 0" }}>This is a computer-generated invoice and does not require a physical signature.</p>
                 </div>
