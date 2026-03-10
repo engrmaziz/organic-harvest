@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store/cart";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { CheckCircle2, Package, Truck, ArrowRight, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +53,7 @@ function SuccessContent() {
     const { clearCart } = useCartStore();
     const [mounted, setMounted] = useState(false);
     const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+    const invoiceRef = useRef<HTMLDivElement>(null);
 
     // Dynamic data passed from the checkout page
     const totalAmount = searchParams.get("total") ? parseFloat(searchParams.get("total")!) : 0;
@@ -70,6 +71,32 @@ function SuccessContent() {
         } catch {
             // Share not supported or user cancelled — fail silently
         }
+    };
+
+    // Direct PDF Download
+    const handleDownloadPDF = async () => {
+        if (!invoiceRef.current) return;
+        const html2canvas = (await import("html2canvas")).default;
+        const { jsPDF } = await import("jspdf");
+
+        const canvas = await html2canvas(invoiceRef.current, { scale: 2 });
+        const imgData = canvas.toDataURL("image/png");
+
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();   // 210 mm
+        const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+
+        // Derive image dimensions in mm by preserving the canvas aspect ratio
+        let imgWidthMm = pdfWidth;
+        let imgHeightMm = (canvas.height / canvas.width) * pdfWidth;
+        if (imgHeightMm > pdfHeight) {
+            imgHeightMm = pdfHeight;
+            imgWidthMm = (canvas.width / canvas.height) * pdfHeight;
+        }
+        const imgX = (pdfWidth - imgWidthMm) / 2;
+
+        pdf.addImage(imgData, "PNG", imgX, 0, imgWidthMm, imgHeightMm);
+        pdf.save("Organic_Harvest_Receipt.pdf");
     };
 
     // WhatsApp Message Builder
@@ -206,7 +233,7 @@ function SuccessContent() {
                                     </Button>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                    <Button onClick={() => window.print()} variant="outline" size="lg" className="rounded-xl h-14 px-8 text-lg font-bold flex items-center gap-2 transition-all duration-300">
+                                    <Button onClick={handleDownloadPDF} variant="outline" size="lg" className="rounded-xl h-14 px-8 text-lg font-bold flex items-center gap-2 transition-all duration-300">
                                         <Download className="w-5 h-5" />
                                         Download Receipt
                                     </Button>
@@ -221,8 +248,19 @@ function SuccessContent() {
                 </div>
             </div>
 
-            {/* ── PRINT-ONLY INVOICE ───────────────────────────────────────── */}
-            <div className="hidden print:block print:w-full print:bg-white print:text-black print:p-8">
+            {/* ── PDF INVOICE (off-screen, captured by html2canvas) ────────── */}
+            <div
+                ref={invoiceRef}
+                style={{
+                    position: "absolute",
+                    left: "-9999px",
+                    top: 0,
+                    width: "794px",
+                    backgroundColor: "#ffffff",
+                    color: "#000000",
+                    padding: "32px",
+                }}
+            >
 
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: `2px solid ${BRAND_COLOR}`, paddingBottom: "24px", marginBottom: "24px" }}>
