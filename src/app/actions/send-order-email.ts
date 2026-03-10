@@ -7,6 +7,7 @@ export async function sendOrderConfirmationEmail(
     orderId: string,
     grandTotal: number
 ): Promise<{ success: boolean; error?: string }> {
+    console.log("📨 ATTEMPTING TO SEND EMAIL TO:", email);
     try {
         if (!process.env.RESEND_API_KEY) {
             throw new Error("RESEND_API_KEY environment variable is not configured.");
@@ -21,7 +22,7 @@ export async function sendOrderConfirmationEmail(
         }).format(grandTotal).replace("PKR", "Rs.");
 
         await resend.emails.send({
-            from: "Organic Harvest <orders@organicharvest.pk>",
+            from: "Organic Harvest <onboarding@resend.dev>",
             to: email,
             subject: `Order Confirmed – #${shortOrderId} | Organic Harvest`,
             html: `
