@@ -32,8 +32,8 @@ export async function validateCoupon(code: string): Promise<CouponResult> {
             return { success: false, error: "Coupon expired or invalid." };
         }
 
-        if (data.used_count >= data.max_uses) {
-            return { success: false, error: "Coupon expired or invalid." };
+        if (data.max_uses !== null && data.used_count >= data.max_uses) {
+            return { success: false, error: "This coupon has already been redeemed." };
         }
 
         return {
@@ -44,6 +44,38 @@ export async function validateCoupon(code: string): Promise<CouponResult> {
                 code: data.code,
             },
         };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "An unexpected error occurred.";
+        return { success: false, error: message };
+    }
+}
+
+export async function burnCoupon(code: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        if (!code || code.trim().length === 0) {
+            return { success: false, error: "Coupon code is required." };
+        }
+
+        const { data, error: fetchError } = await supabase
+            .from("coupons")
+            .select("used_count")
+            .eq("code", code.trim().toUpperCase())
+            .single();
+
+        if (fetchError || !data) {
+            return { success: false, error: "Coupon not found." };
+        }
+
+        const { error: updateError } = await supabase
+            .from("coupons")
+            .update({ used_count: data.used_count + 1 })
+            .eq("code", code.trim().toUpperCase());
+
+        if (updateError) {
+            return { success: false, error: updateError.message };
+        }
+
+        return { success: true };
     } catch (err) {
         const message = err instanceof Error ? err.message : "An unexpected error occurred.";
         return { success: false, error: message };

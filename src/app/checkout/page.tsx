@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ShoppingBag } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { validateCoupon } from "@/app/actions/discount-actions";
+import { validateCoupon, burnCoupon } from "@/app/actions/discount-actions";
 import { sendOrderConfirmationEmail } from "@/app/actions/send-order-email";
 
 // Utility to format currency
@@ -125,6 +125,14 @@ export default function CheckoutPage() {
 
             // Route to success page and inject order data into the URL so the Success Tracker can read it
             const orderId = data && data[0] ? data[0].id : "unknown";
+
+            // Burn coupon after successful order to prevent reuse beyond max_uses
+            if (couponCode) {
+                const burnResult = await burnCoupon(couponCode);
+                if (!burnResult.success) {
+                    console.error("⚠️ Could not burn coupon after order:", burnResult.error);
+                }
+            }
 
             // Send confirmation email via secure Server Action; don't block redirect on failure
             try {
