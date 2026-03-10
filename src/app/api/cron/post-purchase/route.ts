@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { randomBytes } from "crypto";
+
+const PROMO_DISCOUNT_TYPE = "percentage" as const;
+const PROMO_DISCOUNT_VALUE = 10;
+const PROMO_MAX_USES = 1;
 
 function getRequiredEnv(name: string): string {
   const value = process.env[name];
@@ -94,7 +99,7 @@ function buildReviewEmailHtml(customerName: string): string {
 </html>`;
 }
 
-function buildPromoEmailHtml(customerName: string): string {
+function buildPromoEmailHtml(customerName: string, uniqueCode: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -134,7 +139,7 @@ function buildPromoEmailHtml(customerName: string): string {
                 <tr>
                   <td align="center" style="padding:0 0 24px;">
                     <div style="display:inline-block;background-color:#FDFBF7;border:2px dashed #D4AF37;border-radius:8px;padding:12px 32px;">
-                      <span style="font-size:24px;font-weight:800;color:#2E472D;letter-spacing:4px;">HARVEST10</span>
+                      <span style="font-size:24px;font-weight:800;color:#2E472D;letter-spacing:4px;">${uniqueCode}</span>
                     </div>
                   </td>
                 </tr>
@@ -240,16 +245,38 @@ export async function GET(request: NextRequest) {
 
   // Send promo emails
   let promoSent = 0;
-  for (const order of promoOrders ?? []) {
-    const { error } = await resend.emails.send({
-      from: "Organic Harvest <onboarding@resend.dev>",
-      to: order.customer_email,
-      subject: "A special thank-you gift for you 🎁 – 10% off your next order",
-      html: buildPromoEmailHtml(order.customer_name),
-    });
-    if (error) console.error("🔥 RESEND ERROR:", error);
-    else { console.log("✅ EMAIL SENT SUCCESSFULLY"); promoSent++; }
-  }
+  const promoResults = await Promise.allSettled(
+    (promoOrders ?? []).map(async (order) => {
+      const uniqueCode = `HARVEST-${randomBytes(3).toString("hex").toUpperCase()}`;
+      const { error: insertError } = await supabase.from("coupons").insert([
+        {
+          code: uniqueCode,
+          discount_type: PROMO_DISCOUNT_TYPE,
+          discount_value: PROMO_DISCOUNT_VALUE,
+          max_uses: PROMO_MAX_USES,
+        },
+      ]);
+      if (insertError) {
+        console.error("🔥 SUPABASE INSERT ERROR:", insertError);
+        throw insertError;
+      }
+      const { error } = await resend.emails.send({
+        from: "Organic Harvest <onboarding@resend.dev>",
+        to: order.customer_email,
+        subject: "A special thank-you gift for you 🎁 – 10% off your next order",
+        html: buildPromoEmailHtml(order.customer_name, uniqueCode),
+      });
+      if (error) {
+        console.error("🔥 RESEND ERROR:", error);
+        throw error;
+      }
+      console.log("✅ EMAIL SENT SUCCESSFULLY");
+      return true;
+    })
+  );
+  promoResults.forEach((result) => {
+    if (result.status === "fulfilled") promoSent++;
+  });
 
   return NextResponse.json({
     success: true,
