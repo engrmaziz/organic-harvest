@@ -226,31 +226,30 @@ export async function GET(request: NextRequest) {
   }
 
   // Send review emails
-  const reviewResults = await Promise.allSettled(
-    (reviewOrders ?? []).map((order) =>
-      resend.emails.send({
-        from: "Organic Harvest <no-reply@organicharvest.com>",
-        to: order.customer_email,
-        subject: "How was your Organic Harvest order? 🌿 Leave a Review",
-        html: buildReviewEmailHtml(order.customer_name),
-      })
-    )
-  );
+  let reviewSent = 0;
+  for (const order of reviewOrders ?? []) {
+    const { error } = await resend.emails.send({
+      from: "Organic Harvest <onboarding@resend.dev>",
+      to: order.customer_email,
+      subject: "How was your Organic Harvest order? 🌿 Leave a Review",
+      html: buildReviewEmailHtml(order.customer_name),
+    });
+    if (error) console.error("🔥 RESEND ERROR:", error);
+    else { console.log("✅ EMAIL SENT SUCCESSFULLY"); reviewSent++; }
+  }
 
   // Send promo emails
-  const promoResults = await Promise.allSettled(
-    (promoOrders ?? []).map((order) =>
-      resend.emails.send({
-        from: "Organic Harvest <no-reply@organicharvest.com>",
-        to: order.customer_email,
-        subject: "A special thank-you gift for you 🎁 – 10% off your next order",
-        html: buildPromoEmailHtml(order.customer_name),
-      })
-    )
-  );
-
-  const reviewSent = reviewResults.filter((r) => r.status === "fulfilled").length;
-  const promoSent = promoResults.filter((r) => r.status === "fulfilled").length;
+  let promoSent = 0;
+  for (const order of promoOrders ?? []) {
+    const { error } = await resend.emails.send({
+      from: "Organic Harvest <onboarding@resend.dev>",
+      to: order.customer_email,
+      subject: "A special thank-you gift for you 🎁 – 10% off your next order",
+      html: buildPromoEmailHtml(order.customer_name),
+    });
+    if (error) console.error("🔥 RESEND ERROR:", error);
+    else { console.log("✅ EMAIL SENT SUCCESSFULLY"); promoSent++; }
+  }
 
   return NextResponse.json({
     success: true,
