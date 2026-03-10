@@ -76,27 +76,32 @@ function SuccessContent() {
     // Direct PDF Download
     const handleDownloadPDF = async () => {
         if (!invoiceRef.current) return;
-        const html2canvas = (await import("html2canvas")).default;
-        const { jsPDF } = await import("jspdf");
+        try {
+            const element = invoiceRef.current;
+            const domtoimage = (await import("dom-to-image-more")).default;
+            const { jsPDF } = await import("jspdf");
 
-        const canvas = await html2canvas(invoiceRef.current, { scale: 2 });
-        const imgData = canvas.toDataURL("image/png");
+            // Generate high-quality PNG
+            const dataUrl = await domtoimage.toPng(element, {
+                quality: 1,
+                bgcolor: '#ffffff',
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                }
+            });
 
-        const pdf = new jsPDF("p", "mm", "a4");
-        const pdfWidth = pdf.internal.pageSize.getWidth();   // 210 mm
-        const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+            // Calculate A4 dimensions
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
 
-        // Derive image dimensions in mm by preserving the canvas aspect ratio
-        let imgWidthMm = pdfWidth;
-        let imgHeightMm = (canvas.height / canvas.width) * pdfWidth;
-        if (imgHeightMm > pdfHeight) {
-            imgHeightMm = pdfHeight;
-            imgWidthMm = (canvas.width / canvas.height) * pdfHeight;
+            // Add image to PDF and trigger silent download
+            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('Organic_Harvest_Receipt.pdf');
+        } catch (error) {
+            console.error("🔥 PDF Generation Error:", error);
         }
-        const imgX = (pdfWidth - imgWidthMm) / 2;
-
-        pdf.addImage(imgData, "PNG", imgX, 0, imgWidthMm, imgHeightMm);
-        pdf.save("Organic_Harvest_Receipt.pdf");
     };
 
     // WhatsApp Message Builder
