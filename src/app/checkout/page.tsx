@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { validateCoupon, burnCoupon } from "@/app/actions/discount-actions";
 import { sendOrderConfirmationEmail } from "@/app/actions/send-order-email";
 import { saveDraftOrder } from "@/app/actions/checkout-actions";
+import { getSmartUpsell, UpsellProduct } from "@/app/actions/upsell-actions";
 
 // Utility to format currency
 const formatPrice = (price: number) => {
@@ -27,7 +28,7 @@ const formatPrice = (price: number) => {
 
 export default function CheckoutPage() {
     const router = useRouter();
-    const { items, setCoupon, clearCoupon, couponCode, discountAmount, getSubtotal, getShipping, getGrandTotal } = useCartStore();
+    const { items, addItem, setCoupon, clearCoupon, couponCode, discountAmount, getSubtotal, getShipping, getGrandTotal } = useCartStore();
 
     // Mounted state to handle hydration properly
     const [mounted, setMounted] = useState(false);
@@ -49,6 +50,8 @@ export default function CheckoutPage() {
     const [couponApplied, setCouponApplied] = useState(false);
     const [discountError, setDiscountError] = useState("");
     const [applyingCoupon, setApplyingCoupon] = useState(false);
+    const [upsellItem, setUpsellItem] = useState<UpsellProduct | null>(null);
+    const [isUpsellAdding, setIsUpsellAdding] = useState(false);
 
     const handleApplyCoupon = async () => {
         if (!couponInput) return;
@@ -85,6 +88,30 @@ export default function CheckoutPage() {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+        const fetchUpsell = async () => {
+            const ids = items.map((item) => item.id);
+            const result = await getSmartUpsell(ids);
+            setUpsellItem(result);
+        };
+        fetchUpsell();
+    }, [items, mounted]);
+
+    const handleAddUpsell = () => {
+        if (!upsellItem) return;
+        setIsUpsellAdding(true);
+        addItem({
+            id: upsellItem.id,
+            name: upsellItem.name,
+            price: upsellItem.discountedPrice,
+            weight: upsellItem.weight,
+            image_url: upsellItem.image_url,
+        });
+        setUpsellItem(null);
+        setIsUpsellAdding(false);
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -344,6 +371,38 @@ export default function CheckoutPage() {
                             </div>
 
                             <Separator className="my-6" />
+
+                            {upsellItem && (
+                                <div className="mb-4 rounded-xl border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20 p-4">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-yellow-700 dark:text-yellow-400 mb-3">
+                                        ⚡ Special Offer
+                                    </p>
+                                    <div className="flex items-center gap-3">
+                                        {upsellItem.image_url && (
+                                            <div className="relative h-12 w-12 rounded-md overflow-hidden flex-shrink-0 border">
+                                                <Image src={upsellItem.image_url} alt={upsellItem.name} fill className="object-cover" />
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold text-sm line-clamp-1">{upsellItem.name}</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5">Add to this order for 15% off!</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-sm font-bold text-primary">{formatPrice(upsellItem.discountedPrice)}</span>
+                                                <span className="text-xs text-muted-foreground line-through">{formatPrice(upsellItem.price)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={handleAddUpsell}
+                                        disabled={isUpsellAdding}
+                                        className="w-full mt-3 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold"
+                                    >
+                                        {isUpsellAdding ? "Adding..." : "Add to Order"}
+                                    </Button>
+                                </div>
+                            )}
 
                             <div className="space-y-3">
                                 <div className="flex justify-between text-muted-foreground text-sm">
