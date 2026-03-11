@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
-const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
-
 function getRequiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -124,16 +121,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const now = new Date();
-  const fourHoursAgo = new Date(now.getTime() - FOUR_HOURS_MS).toISOString();
-  const twentyFourHoursAgo = new Date(now.getTime() - TWENTY_FOUR_HOURS_MS).toISOString();
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
 
   const { data: abandonedCarts, error } = await supabase
     .from("orders")
-    .select("id, customer_email")
+    .select("*")
     .eq("status", "Draft")
-    .lt("created_at", fourHoursAgo)
-    .gt("created_at", twentyFourHoursAgo);
+    .lte("created_at", twoHoursAgo);
 
   if (error) {
     console.error("Supabase abandoned cart query error:", error);
