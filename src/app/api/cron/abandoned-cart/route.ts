@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { randomBytes } from "crypto";
+
+const ABANDONED_CART_DISCOUNT_TYPE = "percentage" as const;
+const ABANDONED_CART_DISCOUNT_VALUE = 5;
+const ABANDONED_CART_MAX_USES = 1;
 
 function getRequiredEnv(name: string): string {
   const value = process.env[name];
@@ -22,7 +27,7 @@ function createSupabaseClient() {
   );
 }
 
-function buildAbandonedCartEmailHtml(email: string): string {
+function buildAbandonedCartEmailHtml(email: string, uniqueCode: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,7 +59,7 @@ function buildAbandonedCartEmailHtml(email: string): string {
                 <tr>
                   <td style="padding:24px;text-align:center;">
                     <p style="margin:0 0 6px;font-size:13px;color:#4b5563;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Use this code at checkout</p>
-                    <p style="margin:0 0 10px;font-size:32px;font-weight:800;color:#2E472D;letter-spacing:3px;font-family:monospace;">COMEBACK5</p>
+                    <p style="margin:0 0 10px;font-size:32px;font-weight:800;color:#2E472D;letter-spacing:3px;font-family:monospace;">${uniqueCode}</p>
                     <p style="margin:0;font-size:14px;color:#6b7280;">Get 5% off your order when you complete your purchase today.</p>
                   </td>
                 </tr>
@@ -137,11 +142,22 @@ export async function GET(request: NextRequest) {
   let emailsSent = 0;
   const results = await Promise.allSettled(
     (abandonedCarts ?? []).map(async (cart) => {
+      const uniqueCode = `COMEBACK-${randomBytes(3).toString("hex").toUpperCase()}`;
+
+      const { error: couponError } = await supabase
+        .from("coupons")
+        .insert({ code: uniqueCode, discount_type: ABANDONED_CART_DISCOUNT_TYPE, discount_value: ABANDONED_CART_DISCOUNT_VALUE, max_uses: ABANDONED_CART_MAX_USES });
+
+      if (couponError) {
+        console.error("🔥 SUPABASE COUPON INSERT ERROR for cart", cart.id, ":", couponError);
+        throw new Error(`Failed to create coupon for cart ${cart.id}: ${couponError.message}`);
+      }
+
       const { error: emailError } = await resend.emails.send({
         from: "Organic Harvest <onboarding@resend.dev>",
         to: cart.customer_email,
         subject: "You left something behind 🛒 – Complete your Organic Harvest order",
-        html: buildAbandonedCartEmailHtml(cart.customer_email),
+        html: buildAbandonedCartEmailHtml(cart.customer_email, uniqueCode),
       });
 
       if (emailError) {
