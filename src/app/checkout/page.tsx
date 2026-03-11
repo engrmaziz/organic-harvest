@@ -100,9 +100,13 @@ export default function CheckoutPage() {
             quantity: item.quantity,
             price: item.price,
         }));
-        const result = await saveDraftOrder(email, mappedItems, subtotal, draftOrderId);
-        if (result.id) {
-            setDraftOrderId(result.id);
+        try {
+            const result = await saveDraftOrder(email, mappedItems, subtotal, draftOrderId);
+            if (result.id) {
+                setDraftOrderId(result.id);
+            }
+        } catch (error) {
+            console.error("🔥 CLIENT DRAFT ERROR:", error);
         }
     };
 

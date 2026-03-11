@@ -38,10 +38,21 @@ export async function saveDraftOrder(
 
         const { data, error } = await supabase
             .from("orders")
-            .insert([{ customer_email: email, status: "Draft", total_amount: subtotal, items }])
+            .insert([{
+                customer_email: email,
+                status: "Draft",
+                total_amount: subtotal,
+                items,
+                customer_name: "Draft User",
+                customer_phone: "N/A",
+                customer_city: "N/A",
+                customer_address: "N/A",
+                payment_method: "Draft",
+            }])
             .select("id")
             .single();
 
+        if (error) console.error("🔥 SUPABASE DRAFT ERROR:", error);
         if (error) throw error;
         return { id: data.id };
     } catch (err) {
