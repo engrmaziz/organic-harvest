@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Groq from "groq-sdk";
-import { supabase } from "@/lib/supabase";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const N8N_WEBHOOK_URL =
+  "https://impartible-cyanuric-asher.ngrok-free.dev/webhook/73cc5ea3-7518-488b-955e-df5e78ee12b3/chat";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,89 +9,50 @@ export async function POST(req: NextRequest) {
     const messages: { role: string; content: string }[] = body.messages ?? [];
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: "No messages provided." }, { status: 400 });
-    }
-
-    // Fetch active products from Supabase with graceful degradation
-    let productList = "No products currently available.";
-    try {
-      const { data: products, error: supabaseError } = await supabase
-        .from("products")
-        .select("id, name, price, category, tags, stock_quantity")
-        .eq("is_active", true);
-
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      if (products && products.length > 0) {
-        productList = products
-          .map(
-            (p) =>
-              `- ${p.name} | Category: ${p.category} | Price: Rs. ${p.price} | Stock: ${p.stock_quantity}${p.tags ? ` | Tags: ${p.tags}` : ""}`
-          )
-          .join("\n");
-      }
-    } catch (error) {
-      console.error("Supabase Error:", error);
-      // Fall back to empty product list so Nectar can still respond
-      productList = "No products currently available.";
-    }
-
-    const systemPrompt = `You are Nectar, the official AI guide for Organic Harvest, a premium Pakistani organic food brand. You are friendly, helpful, and knowledgeable about our products.
-
-BUSINESS RULES:
-- Shipping is a flat Rs. 250 across Pakistan.
-- Orders of Rs. 3000 or above receive FREE shipping.
-
-CURRENT LIVE STOCK:
-${productList}
-
-STRICT STOCK RULE:
-Before confirming availability, check the stock_quantity field. If stock_quantity is 0, you MUST explicitly tell the user that the item is currently OUT OF STOCK and apologize.
-
-STRICT FALLBACK RULE:
-If a user asks something outside your knowledge, or requests human support, DO NOT hallucinate or make up information. Apologize politely and instruct them to contact human support via:
-- WhatsApp: +92 300 0000000
-- Email: support@organicharvest.com
-
-STRICT PRODUCT INFORMATION RULE:
-NEVER guess or assume product weights or sizes. If the weight is not explicitly written in the product name, tell the user to check the website product page.
-
-STRICT ORDER PROCESSING RULE:
-YOU CANNOT PROCESS PAYMENTS OR TAKE ORDERS. If a user wants to order, instruct them to add the item to their cart on the website, or provide the WhatsApp number (+92 300 0000000) for manual orders.
-
-LINK SHARING RULE:
-YOU ARE ENCOURAGED TO SHARE LINKS. Your base website URL is \`https://organic-harvest.vercel.app\`. If a user asks how to buy something, where to find it, or asks for a link, explicitly give them the link to \`https://organic-harvest.vercel.app/products\` or the specific category page (e.g., \`https://organic-harvest.vercel.app/category/[category-name]\`). Never tell a user you cannot share links.
-
-Keep responses concise and direct to ensure fast loading times.
-
-Always respond in a helpful, concise, and friendly manner. Only answer questions related to Organic Harvest products, orders, shipping, and general brand information.`;
-
-    try {
-      const completion = await groq.chat.completions.create({
-        model: "llama-3.1-8b-instant",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages.map((m) => ({
-            role: m.role as "user" | "assistant",
-            content: m.content,
-          })),
-        ],
-      });
-
-      const assistantMessage = completion.choices[0]?.message?.content ?? "I'm sorry, I couldn't generate a response. Please try again.";
-
-      return NextResponse.json({ message: assistantMessage });
-    } catch (error) {
-      console.error("Groq Error:", error);
       return NextResponse.json(
-        { error: "An unexpected error occurred. Please try again later." },
-        { status: 500 }
+        { error: "No messages provided." },
+        { status: 400 }
       );
     }
+
+    // Extract latest user message to send to n8n
+    const latestUserMessage = messages
+      .filter((m) => m.role === "user")
+      .at(-1)?.content ?? "";
+
+    // Use a session ID based on conversation history length
+    // so n8n memory tracks the conversation correctly
+    const sessionId = `organic-harvest-${messages.length}`;
+
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chatInput: latestUserMessage,
+        sessionId: sessionId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`n8n webhook error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // n8n returns { output: "..." }
+    const assistantMessage =
+      data.output ??
+      data.text ??
+      data.message ??
+      "I'm sorry, I couldn't generate a response. Please try again.";
+
+    // Return in same format as before so frontend works unchanged
+    return NextResponse.json({ message: assistantMessage });
+
   } catch (err) {
-    console.error("GROQ/SUPABASE API ERROR:", err);
+    console.error("n8n Webhook Error:", err);
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again later." },
       { status: 500 }
